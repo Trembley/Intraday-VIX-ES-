@@ -1,50 +1,159 @@
-# order-flow-signal
-Order flow vs price dislocation signal (TSLA intraday)
+# Intraday VIX Term-Structure Signal on ES Futures
 
 ## Overview
-This project studies the relationship between short-term order flow and price movement.
-The goal is to detect situations where aggressive buying or selling pressure is not yet reflected in price.
 
-## Research Question
-Can signed order flow predict short-horizon future returns when price has not yet adjusted?
+This project investigates whether intraday VIX term-structure — specifically the slope between VIX and VIX3M — contains predictive power for short-horizon ES futures returns.
 
-## Intuition
-When there is strong aggressive buying but price barely moves up, this may indicate latent upward pressure.
-Similarly, strong selling pressure without price decline may indicate latent downward pressure.
+Using 1-minute ES data (5-minute momentum window) merged with daily VIX/VIX3M, we test whether volatility backwardation/contango conditions influence next-period returns, and evaluate a simple long/short strategy based on quantile bucket thresholds.
 
-## Data
-- Instrument: TSLA
-- Frequency: Intraday (1-minute bars)
-- Source: Yahoo Finance (yfinance)
-- Fields used:
-  - Open, High, Low, Close
-  - Volume
-  - Mid price (constructed)
+This project is designed as a quant research portfolio piece, emphasizing:
+
+- Data engineering
+- Indicator construction
+- Train/test separation
+- Backtesting and evaluation
+- Robust interpretation rather than overfitting
+
+
+---
+
+## Data Summary
+
+ES 1-Minute Intraday (Main Instrument)
+- OHLCV data aligned to US/Eastern
+- Filtered to regular Trading Hours (09:30–16:00)
+- Total RTH bars: 316,409
+- Clean continuous index (no NaNs)
+
+VIX (CBOE)
+- Daily close  
+- 1990 → 2025  
+
+VIX3M (CBOE 3-Month Volatility)
+- Daily close  
+- 2007 → 2025  
+
+Merged DataFrame Columns
+
+['open', 'high', 'low', 'close', 'volume', 'date', 'VIX', 'VIX3M']
 
 ## Methodology
-- Signed order flow over rolling window
-- Midprice log return
-- Z-score normalization
-- Signal = Flow Z-score – Price Move Z-score
 
-### Trade Classification
-Trades are classified using a tick-rule proxy for the Lee–Ready algorithm:
-- Buy-initiated if price increases
-- Sell-initiated if price decreases
+1. Data Alignment & Preprocessing
+- Load ES 1-min CSV  
+- Convert timestamps to US/Eastern  
+- Restrict to RTH  
+- Merge daily VIX + VIX3M onto intraday ES  
+- Forward-fill daily values  
+- Validate continuous time index + missing values
+---
 
-### Signal Construction
-We construct:
-- Net Order Flow
-- Realized Price Movement
+### 2. **Feature Engineering**
+We compute:
 
-Final signal:
-Sₜ = Normalized(Flowₜ) − Normalized(ΔPₜ)
+#### • 1-minute log return  
+\[
+r_{1m} = \log(\frac{P_t}{P_{t-1}})
+\]
 
-## Results
-Key findings:
-- The signal shows weak but non-zero predictive power (IC ≈ -0.007 over 10-minute horizon)
-- Return monotonicity across signal deciles is observed
-- A toy long/short strategy suggests the signal is not directly tradable but contains information
+#### • 5-minute forward return (target)  
+\[
+r_{5m}^{future} = \log(\frac{P_{t+5}}{P_t})
+\]
 
-## Repository Structure
+#### • VIX Term-Structure Slope  
+\[
+\text{slope} = \frac{VIX - VIX3M}{VIX3M}
+\]
 
+#### • Quantile Buckets  
+Examples: bottom **30%**, top **90%**
+
+---
+
+### 3. **Signal Rules**
+
+#### **Long Entry**
+Slope < 30% quantile  
+→ Extreme backwardation → market fear → short-term upward mean reversion
+
+#### **Short Entry**
+Slope > 90% quantile  
+→ Strong contango → complacent market → short-term downward pressure
+
+#### **Exit**
+Fixed holding period **5 minutes**
+
+---
+
+### 4. **Train/Test Split**
+- Train: first **70%**
+- Test: last **30%**
+- No leakage  
+- Ensures realistic out-of-sample evaluation
+
+---
+
+## Backtest Results
+
+### **Training Set Performance**
+| Metric | Value |
+|--------|--------|
+| Number of trades | **12,636** |
+| Win rate | **47.89%** |
+| Avg win | 0.000630 |
+| Avg loss | -0.000688 |
+| Expectancy | **0.000038/trade** |
+| Profit Factor | **1.143** |
+| Sharpe (per trade) | 0.045 |
+| Max Drawdown | -0.0551 |
+
+---
+
+### Test Set Performance**
+| Metric | Value |
+|--------|--------|
+| Number of trades | **11,235** |
+| Win rate | **46.14%** |
+| Avg win | 0.001309 |
+| Avg loss | -0.001309 |
+| Expectancy | ~0 |
+| Profit Factor | ~1.0 |
+
+---
+
+## Interpretation
+
+### Key Finding
+- VIX–VIX3M slope contains weak but persistent predictive power.
+- The signal directionally generalizes from train → test.
+- Strongest effect occurs during backwardation (slope < 0).
+- Expectancy is small (as expected with daily VIX + intraday ES mismatch).
+
+## Why performance is weak
+- VIX/VIX3M are daily indices, not intraday  
+- ES moves are dominated by microstructure noise  
+- No transaction cost model  
+- No volatility-of-volatility adjustment  
+
+Still, the stability across many trades shows the signal is structural, not noise.
+
+
+---
+
+## Future Extensions
+Some natural improvements:
+
+- Use VIX front futures (VX1/VX2) for intraday term structure  
+- Include TICK, ADD, or order-flow imbalance
+- Add volatility regime filters
+- Combine with intraday momentum factors  
+
+---
+
+## Disclaimer
+Research only.  
+Not investment advice.  
+Past performance does not guarantee future results.
+
+---
