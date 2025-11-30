@@ -67,7 +67,7 @@ r_{5m}^{future} = \log(\frac{P_{t+5}}{P_t})
 \]
 
 #### • Quantile Buckets  
-Examples: bottom **30%**, top **90%**
+Examples: bottom 30%, top 90%
 
 ---
 
@@ -99,12 +99,12 @@ Fixed holding period **5 minutes**
 ### **Training Set Performance**
 | Metric | Value |
 |--------|--------|
-| Number of trades | **12,636** |
-| Win rate | **47.89%** |
+| Number of trades | 26|
+| Win rate | 50% |
 | Avg win | 0.000630 |
 | Avg loss | -0.000688 |
-| Expectancy | **0.000038/trade** |
-| Profit Factor | **1.143** |
+| Expectancy | 0.000038/trade|
+| Profit Factor | 1.143 |
 | Sharpe (per trade) | 0.045 |
 | Max Drawdown | -0.0551 |
 
@@ -113,8 +113,8 @@ Fixed holding period **5 minutes**
 ### Test Set Performance**
 | Metric | Value |
 |--------|--------|
-| Number of trades | **11,235** |
-| Win rate | **46.14%** |
+| Number of trades | 843 |
+| Win rate | 46%|
 | Avg win | 0.001309 |
 | Avg loss | -0.001309 |
 | Expectancy | ~0 |
