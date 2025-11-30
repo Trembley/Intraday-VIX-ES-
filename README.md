@@ -61,8 +61,17 @@ r_{5m}^{future} = \log(\frac{P_{t+5}}{P_t})
 \text{slope} = \frac{VIX - VIX3M}{VIX3M}
 \]
 
-#### • Quantile Buckets  
-Examples: bottom 30%, top 90%
+**Quantile buckets** divide the Z-scored VIX term-structure slope (ZSlope) into 10 equally sized groups (deciles) from lowest to highest values.  
+For each bucket, the mean future 60-minute ES return is computed to assess whether higher or lower term-structure slope corresponds to systematic price pressure.
+
+In this dataset, bucket behavior is **non-monotonic and unstable**:
+- The lowest decile shows the highest positive return.
+- The highest decile also shows positive return.
+- Middle deciles exhibit no structure.
+- No directional consistency appears across the training window.
+
+This indicates that **ZSlope does not exhibit predictive power** for intraday ES returns during the available period.
+
 
 ---
 
