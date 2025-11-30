@@ -6,15 +6,6 @@ This project investigates whether intraday VIX term-structure — specifically t
 
 Using 1-minute ES data (5-minute momentum window) merged with daily VIX/VIX3M, we test whether volatility backwardation/contango conditions influence next-period returns, and evaluate a simple long/short strategy based on quantile bucket thresholds.
 
-This project is designed as a quant research portfolio piece, emphasizing:
-
-- Data engineering
-- Indicator construction
-- Train/test separation
-- Backtesting and evaluation
-- Robust interpretation rather than overfitting
-
-
 ---
 
 ## Data Summary
@@ -46,6 +37,10 @@ Merged DataFrame Columns
 - Merge daily VIX + VIX3M onto intraday ES  
 - Forward-fill daily values  
 - Validate continuous time index + missing values
+
+**Data limitation:**  
+VIX3M only starts in **late 2007**, making the usable training window extremely short (≈2 months).
+
 ---
 
 ### 2. **Feature Engineering**
@@ -71,55 +66,42 @@ Examples: bottom 30%, top 90%
 
 ---
 
-### 3. **Signal Rules**
+## Signal Rules
 
-#### **Long Entry**
-Slope < 30% quantile  
-→ Extreme backwardation → market fear → short-term upward mean reversion
+Because the VIX3M history begins only in late 2007, the training window is extremely small.  
+For completeness, the study still constructs simple long/short rules based on ZSlope deciles, but the instability of the bucket structure makes these rules exploratory rather than actionable.
 
-#### **Short Entry**
-Slope > 90% quantile  
-→ Strong contango → complacent market → short-term downward pressure
+### Long Entry (Exploratory) 
+Enter long when ZSlope is in the **lowest deciles** (extreme backwardation).  
+- Interpretation: Backwardation often reflects short-term stress; historically this can be followed by short-term mean reversion.  
+- Limitation: In this dataset, the relation is weak and inconsistent across deciles.
 
-#### **Exit**
-Fixed holding period **5 minutes**
+### **Short Entry (Exploratory)**  
+Enter short when ZSlope is in the **highest deciles** (strong contango).  
+- Interpretation: A complacent volatility term structure may precede small downward pressure.  
+- Limitation: The training sample is too small for reliable directional mapping.
 
----
-
-### 4. **Train/Test Split**
-- Train: first **70%**
-- Test: last **30%**
-- No leakage  
-- Ensures realistic out-of-sample evaluation
+### **Exit Rule**  
+A fixed **60-minute holding period** is used to match the prediction horizon for future returns.
 
 ---
 
 ## Backtest Results
 
-### **Training Set Performance**
-| Metric | Value |
-|--------|--------|
-| Number of trades | 26|
-| Win rate | 50% |
-| Avg win | 0.000630 |
-| Avg loss | -0.000688 |
-| Expectancy | 0.000038/trade|
-| Profit Factor | 1.143 |
-| Sharpe (per trade) | 0.045 |
-| Max Drawdown | -0.0551 |
+### Train Window: Nov–Dec 2007  
+- Trades: 26  
+- Win rate: 50%  
+- PnL: +2.95 ES points  
+- Too little data for reliable inference  
 
----
-
-### Test Set Performance**
-| Metric | Value |
-|--------|--------|
-| Number of trades | 843 |
-| Win rate | 46%|
-| Avg win | 0.001309 |
-| Avg loss | -0.001309 |
-| Expectancy | ~0 |
-| Profit Factor | ~1.0 |
-
+### Test Window: 2008  
+- Trades: 843  
+- Win rate: 46%  
+- PnL: –550 ES points  
+- Profit factor: 0.73  
+- Max drawdown: –555 ES points  
+- Long-biased exposure
+  
 ---
 
 ## Interpretation
