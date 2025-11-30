@@ -69,7 +69,7 @@ Examples: bottom 30%, top 90%
 ## Signal Rules
 
 Because the VIX3M history begins only in late 2007, the training window is extremely small.  
-For completeness, the study still constructs simple long/short rules based on ZSlope deciles, but the instability of the bucket structure makes these rules exploratory rather than actionable.
+For completeness, the study still constructs simple long/short rules based on ZSlope deciles
 
 ### Long Entry (Exploratory) 
 Enter long when ZSlope is in the **lowest deciles** (extreme backwardation).  
