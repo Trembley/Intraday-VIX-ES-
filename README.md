@@ -8,6 +8,18 @@ Using 1-minute ES data (5-minute momentum window) merged with daily VIX/VIX3M, w
 
 ---
 
+## Motivation
+
+Volatility term-structure reflects market expectations of near-term risk.
+
+- Backwardation (VIX > VIX3M) → front-loaded fear → rebalancing flows, dealer hedging pressure, and short-horizon mean reversion in equity indices.
+
+- Contango (VIX < VIX3M) → complacency → weaker hedging demand → slightly negative forward returns.
+
+This project tests whether these theoretical patterns appear even when combining daily volatility indices with intraday ES futures.
+
+---
+
 ## Data Summary
 
 ES 1-Minute Intraday (Main Instrument)
@@ -38,8 +50,14 @@ Merged DataFrame Columns
 - Forward-fill daily values  
 - Validate continuous time index + missing values
 
-**Data limitation:**  
-VIX3M only starts in **late 2007**, making the usable training window extremely short (≈2 months).
+---
+
+## Challenges & Constraints
+
+- VIX and VIX3M are daily closing values, not intraday → feature is low-frequency.
+- ES 1-minute returns are dominated by microstructure noise.
+- VIX3M history begins only in late 2007, dramatically shrinking train sample.
+- Regime shift into 2008 financial crisis breaks distributional assumptions.
 
 ---
 
@@ -181,6 +199,20 @@ Some natural improvements:
 - Include TICK, ADD, or order-flow imbalance
 - Add volatility regime filters
 - Combine with intraday momentum factors  
+
+---
+
+## What I Learned
+
+How to align intraday futures data with daily macro indices
+
+The difficulty of extracting signals from microstructure-level ES noise
+
+Importance of regime-awareness when evaluating volatility-based factors
+
+Handling limited datasets and understanding when a signal is not robust
+
+How term-structure information interacts with short-horizon equity index returns
 
 ---
 
