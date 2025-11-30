@@ -43,34 +43,76 @@ VIX3M only starts in **late 2007**, making the usable training window extremely 
 
 ---
 
-### 2. **Feature Engineering**
-We compute:
+## 2. Feature Engineering
 
-#### • 1-minute log return  
+This study constructs three core elements: intraday returns, forward-looking targets, and the volatility term-structure feature. All features are aligned on a unified 1-minute grid after timezone correction and RTH filtering.
+
+---
+
+### 1-minute log return
+The basic intraday movement metric:
+
 \[
-r_{1m} = \log(\frac{P_t}{P_{t-1}})
+r_{1m}(t) = \log\left(\frac{P_t}{P_{t-1}}\right)
 \]
 
-#### • 5-minute forward return (target)  
+Used primarily for exploratory diagnostics.
+
+---
+
+### 60-minute forward return (target)
+
 \[
-r_{5m}^{future} = \log(\frac{P_{t+5}}{P_t})
+r_{60m}^{(future)}(t) = \log\left(\frac{P_{t+60}}{P_t}\right)
 \]
 
-#### • VIX Term-Structure Slope  
+This is the quantity we attempt to predict using volatility term-structure information.
+
+---
+
+### VIX Term-Structure Slope
+
+The raw slope:
+
 \[
-\text{slope} = \frac{VIX - VIX3M}{VIX3M}
+\text{slope}(t) = {VIX}(t) - {VIX3M}(t)
 \]
 
-**Quantile buckets** divide the Z-scored VIX term-structure slope (ZSlope) into 10 equally sized groups (deciles) from lowest to highest values.  
-For each bucket, the mean future 60-minute ES return is computed to assess whether higher or lower term-structure slope corresponds to systematic price pressure.
+captures the relative steepness of the volatility term structure.  
+Backwardation → VIX > VIX3M  
+Contango → VIX < VIX3M
 
-In this dataset, bucket behavior is **non-monotonic and unstable**:
-- The lowest decile shows the highest positive return.
-- The highest decile also shows positive return.
-- Middle deciles exhibit no structure.
-- No directional consistency appears across the training window.
+Because daily VIX and VIX3M values are forward-filled across intraday timestamps, a rolling normalization is required.
 
-This indicates that **ZSlope does not exhibit predictive power** for intraday ES returns during the available period.
+---
+
+### Z-Scored Slope (ZSlope)
+
+A 7700-minute (~20 trading days) rolling window is used to standardize the slope:
+
+\[
+ZSlope(t) = \frac{\text{slope}(t) - \mu_t}{\sigma_t}
+\]
+
+This removes slow-moving level shifts and ensures all decile comparisons are done on a stationary-like feature.
+
+---
+
+### Quantile Buckets (Deciles)
+
+To evaluate whether ZSlope exhibits systematic directional information, the feature is divided into 10 equally sized buckets (deciles) based on its distribution within the training window.
+
+For each bucket, we compute the mean future 60-minute return.  
+This reveals whether extreme backwardation/contango corresponds to consistent price pressure.
+
+Observed behavior (training window):
+
+- Lowest decile (extreme backwardation) → highest positive return  
+- Highest decile (strong contango) → also positive return  
+- Middle deciles → no significant structure  
+- No monotonic relationship across buckets  
+
+These patterns indicate that ZSlope provides no stable or reliable predictive signal during the 2007–2008 sample, largely due to the limited historical availability of VIX3M and the regime shift entering 2008.
 
 
 ---
